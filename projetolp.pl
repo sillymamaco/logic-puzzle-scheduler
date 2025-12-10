@@ -7,14 +7,11 @@
 :- ['listas_palavras.pl']. 
 
 
-contagemSoma([], 0, 0).
-contagemSoma([Primeiro | Lista], Contagem +1, Soma + Primeiro) :-
-    contagemSoma(Lista, Contagem, Soma).
-
 media([], 0) :- !.
 media(ListaValores, Media) :- 
-    contagemSoma(ListaValores, Contagem, Soma),
-    arredonda((Soma / Contagem), Media).
+    sum_list(ListaValores, Soma),
+    length(ListaValores, Contagem),
+    arredonda(Soma/Contagem, Media).
 
 
 filtraIdade(IdadeMin, IdadeMax, Nota, Id) :- 
@@ -65,30 +62,44 @@ notasAltaMuitasHoras(Id, HorasEcra, Nota) :-
 
 probEcraNotasAltas(HorasEcra, Nota, Probabilidade) :- 
     findall(Id, notasAltaMuitasHoras(Id, HorasEcra, Nota), NotasHoras),
-    contagemSoma(NotasHoras, NumeroNotasHoras, _),
+    length(NotasHoras, NotasHorasNumero),
     findall(Id, muitasHoras(Id, HorasEcra), Horas),
-    contagemSoma(Horas, NumeroHoras, _),
-    arredonda(NumeroNotasHoras / NumeroHoras, Probabilidade).
+    length(Horas, HorasNumero),
+    arredonda(NotasHorasNumero / HorasNumero, Probabilidade).
 
-/*
- subtraiValorDeLista(Lista, Valor, Resultado) é verdade se Resultado for a lista que
-se obtém depois de tirar o valor Valor de todos os elementos da lista Lista;
-– somaQuadrados(Lista, Resultado) é verdade se Resultado for a lista que se obtém depois
-de se somar o quadrado de cada elemento da lista Lista.
-*/
+subtrai(Valor, X, Resposta) :-
+    Resposta is X-Valor.
+subtraiValorDeLista([], _, []).
+subtraiValorDeLista(Lista, Valor, Resultado) :- 
+    maplist(subtrai(Valor), Lista, Resultado).
 
-
-/*
-– produtoEscalar(Lista1, Lista2, Resultado) é verdade se Resultado for a lista que se
-obtém depois de se calcular o produto escalar entre os elementos de Lista1 e Lista2 (isto é,
-somar os resultados das multiplicações dos elementos nas mesmas posições nas duas listas).
-Este predicado deve falhar se as listas Lista1 e Lista2 não tiverem o mesmo tamanho.
-*/
+quadrado(X, Resposta) :-
+    Resposta is X**2.
+somaQuadrados([], 0).  
+somaQuadrados(Lista, Resultado) :- 
+    maplist(quadrado, Lista, ListaQuadrados),
+    sum_list(ListaQuadrados, Resultado).
 
 
-/*
-– correlação(Lista1, Lista2, Resultado) é verdade se Resultado for a lista que se obtém
-depois de se calcular a correlação entre os valores das listas Lista1 e Lista2, de acordo com
-a Equação 2.
-*/
+multiplicacao(X, Y, Res) :-
+    Res is X * Y.
+produtoEscalar(Lista1, Lista2, Resultado) :- 
+    length(Lista1, L1),
+    length(Lista2, L2),
+    L1 == L2,
+    maplist(multiplicacao, Lista1, Lista2, Produtos),
+    sum_list(Produtos, Resultado).
 
+
+
+
+correlacao(Lista1, Lista2, Resultado) :-
+    media(Lista1, Media1),
+    subtraiValorDeLista(Lista1, Media1, Res1),
+    media(Lista2, Media2),
+    subtraiValorDeLista(Lista2, Media2, Res2),
+    produtoEscalar(Res1, Res2, Numerador),
+    somaQuadrados(Res1, Quadrados1),
+    somaQuadrados(Res2, Quadrados2),
+    Denominador is sqrt(Quadrados1) * sqrt(Quadrados2),
+    arredonda(Numerador / Denominador, Resultado).
