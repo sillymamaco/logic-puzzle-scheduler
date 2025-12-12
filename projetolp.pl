@@ -5,7 +5,7 @@
 :- ['codigoAuxiliar.pl']. 
 :- ['bd_estudantes.pl']. 
 :- ['listas_palavras.pl']. 
-
+:- ['jogar.pl'].
 
 /* -----Inicio da parte um do projeto-----*/
 
@@ -216,3 +216,70 @@ pista3(Palavra1, Palavra2, Pista) :-
 
 
 
+/* ----- Inicio da parte 3 ----- */
+
+processaRestricao(terror(Filme), Programacao) :-
+    Filme \== empty,
+    (nth1(Index, Programacao, Filme),
+    \+ member(Index, [1, 2, 5, 6])
+     ; true).
+
+processaRestricao(soPode(Filme, Sessao), Programacao) :-
+    Filme \== empty,
+    nth1(Sessao, Programacao, Filme).
+
+processaRestricao(nunca(Filme, Sessao), Programacao) :-
+    nth1(Sessao, Programacao, Outro),
+    Outro \== Filme.
+
+processaRestricao(seguido(Filme1, Filme2), Programacao) :-
+    nth1(Index1, Programacao, Filme1),
+    Index2 is Index1 + 1,
+    nth1(Index2, Programacao, Filme2),
+    Index1 \== 4.
+
+processaRestricao(naoSeguido(Filme1, Filme2), Programacao) :-
+    \+(nth1(Index1, Programacao, Filme1),
+       nth1(Index2, Programacao, Filme2),
+       (Index2 is Index1 + 1 ; Index1 is Index2 + 1), 
+       \+ (Index1 =< 4, Index2 > 4),                  
+       \+ (Index2 =< 4, Index1 > 4)).
+
+
+processaRestricao(antes(Filme1, Filme2), Programacao) :-
+    nth1(Sessao1, Programacao, Filme1),
+    nth1(Sessao2, Programacao, Filme2),
+    Sessao1 < Sessao2.
+
+/*
+[f1, f2, f3, f4, f5, f6, f7]
+
+[[hip1, hip2,...], [hip1, hip2, ...],...]
+
+terror(Filme)
+soPode(FilmeSessao)
+nunca(ilme, sessao)
+seguido(Filme1, Filme2)
+naoSeguido(FIlme1, Filme2)
+antes(Filme1, Filme2)
+
+sab 14h 17h 20h 23h
+dom 14h 17h 20h
+
+terror nao de 14h e 17h
+*/
+processaTodasRestricoes([], _).
+processaTodasRestricoes([Restricao | Restricoes], Programacao) :-
+    processaRestricao(Restricao, Programacao),
+    processaTodasRestricoes(Restricoes, Programacao).
+
+maratonaFilmes(ListaFilmes, ListaRestricoes, Programacao) :-
+    length(ListaFilmes, NFilmes),
+    M is 7 - NFilmes,
+    length(ListaEmpty, M),
+    maplist(=(empty), ListaEmpty),
+    append(ListaFilmes, ListaEmpty, TodosFilmes),
+    setof(Programacoes, (permutation(TodosFilmes, Programacoes), 
+    processaTodasRestricoes(ListaRestricoes, Programacoes)), Programacao).
+%lista ordenada sem elementos repetidos (setof?) com listas das possiveis sequencias
+%(mais q 1solucao ou nenhuma)

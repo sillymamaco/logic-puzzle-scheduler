@@ -1,0 +1,14 @@
+{
+    "prolog.terminal.runtimeArgs": [
+
+
+
+
+    ],
+    "files.associations": {
+        "*.pl": "prolog_swi"
+    },
+    "files.autoSave": "onFocusChange",
+    "prolog.linter.run": "never",
+    "prolog.executablePath": "C:\\Program Files\\swipl\\bin\\swipl-win.exe"
+}
